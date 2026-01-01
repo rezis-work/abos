@@ -4,12 +4,16 @@ export interface BaseEvent {
   eventType: string;
   timestamp: string;
   payload: Record<string, unknown>;
+  correlationId?: string;
+  causationId?: string;
 }
 
 export type RoutingKey = 
   | 'user.created'
+  | 'user.created.v1'
   | 'user.updated'
   | 'user.role_changed'
+  | 'user.role_changed.v1'
   | 'user.deleted'
   | 'building.created'
   | 'unit.assigned_to_user'

@@ -2,26 +2,54 @@ import { Channel, ConsumeMessage } from 'amqplib';
 import { getChannel, closeConnection } from './connection';
 import { createLogger } from '@common/logger';
 import { BaseEvent, RoutingKey, EXCHANGE_NAME } from './types';
+import {
+  IdempotencyStore,
+  MemoryIdempotencyStore,
+  RetryConfig,
+  DEFAULT_RETRY_CONFIG,
+  retryWithBackoff,
+  incrementRedeliveryCount,
+} from './reliability';
 
 const logger = createLogger('events');
 
 export class EventPublisher {
-  async publish(routingKey: RoutingKey, event: BaseEvent): Promise<void> {
+  async publish(
+    routingKey: RoutingKey,
+    event: BaseEvent,
+    correlationId?: string,
+    causationId?: string
+  ): Promise<void> {
     try {
       const channel = await getChannel();
-      const message = Buffer.from(JSON.stringify(event));
+      
+      // Add correlation IDs if provided
+      const eventWithIds: BaseEvent = {
+        ...event,
+        correlationId: correlationId || event.correlationId,
+        causationId: causationId || event.causationId || event.eventId,
+      };
+      
+      const message = Buffer.from(JSON.stringify(eventWithIds));
 
       await channel.publish(EXCHANGE_NAME, routingKey, message, {
         persistent: true,
         messageId: event.eventId,
         timestamp: Date.now(),
         type: event.eventType,
+        correlationId: eventWithIds.correlationId,
+        headers: {
+          'x-correlation-id': eventWithIds.correlationId,
+          'x-causation-id': eventWithIds.causationId,
+        },
       });
 
       logger.debug('Event published', {
         routingKey,
         eventType: event.eventType,
         eventId: event.eventId,
+        correlationId: eventWithIds.correlationId,
+        causationId: eventWithIds.causationId,
       });
     } catch (error) {
       logger.error('Failed to publish event', {
@@ -40,10 +68,22 @@ export interface EventHandler<T = unknown> {
 
 export class EventConsumer {
   private queueName: string;
+  private dlqName: string;
   private handlers: Map<string, EventHandler> = new Map();
+  private idempotencyStore: IdempotencyStore;
+  private retryConfig: RetryConfig;
 
-  constructor(queueName: string) {
+  constructor(
+    queueName: string,
+    options?: {
+      idempotencyStore?: IdempotencyStore;
+      retryConfig?: RetryConfig;
+    }
+  ) {
     this.queueName = queueName;
+    this.dlqName = `${queueName}.dlq`;
+    this.idempotencyStore = options?.idempotencyStore || new MemoryIdempotencyStore();
+    this.retryConfig = options?.retryConfig || DEFAULT_RETRY_CONFIG;
   }
 
   async start(): Promise<void> {
@@ -51,11 +91,21 @@ export class EventConsumer {
       const channel = await getChannel();
       
       await channel.addSetup(async (ch: Channel) => {
+        // Assert main queue
         await ch.assertQueue(this.queueName, {
+          durable: true,
+          arguments: {
+            'x-dead-letter-exchange': EXCHANGE_NAME,
+            'x-dead-letter-routing-key': this.dlqName,
+          },
+        });
+
+        // Assert DLQ
+        await ch.assertQueue(this.dlqName, {
           durable: true,
         });
 
-        logger.info(`Queue '${this.queueName}' asserted`);
+        logger.info(`Queue '${this.queueName}' and DLQ '${this.dlqName}' asserted`);
 
         await ch.consume(
           this.queueName,
@@ -66,24 +116,78 @@ export class EventConsumer {
 
             try {
               const event: BaseEvent = JSON.parse(message.content.toString());
+
+              // Check idempotency
+              const isProcessed = await this.idempotencyStore.isProcessed(event.eventId);
+              if (isProcessed) {
+                logger.info('Event already processed, skipping', {
+                  eventId: event.eventId,
+                  eventType: event.eventType,
+                  correlationId: event.correlationId,
+                });
+                ch.ack(message);
+                return;
+              }
+
               const handler = this.handlers.get(event.eventType);
 
-              if (handler) {
-                await handler(event, message);
-                ch.ack(message);
-              } else {
+              if (!handler) {
                 logger.warn('No handler found for event type', {
                   eventType: event.eventType,
                   queueName: this.queueName,
                 });
                 ch.nack(message, false, true); // Requeue for retry
+                return;
               }
-            } catch (error) {
-              logger.error('Error processing event', {
-                error: error instanceof Error ? error.message : String(error),
-                queueName: this.queueName,
+
+              // Process with retry
+              await retryWithBackoff(
+                async () => {
+                  await handler(event, message);
+                },
+                this.retryConfig
+              );
+
+              // Mark as processed
+              await this.idempotencyStore.markProcessed(event.eventId);
+
+              ch.ack(message);
+
+              logger.debug('Event processed successfully', {
+                eventId: event.eventId,
+                eventType: event.eventType,
+                correlationId: event.correlationId,
               });
-              ch.nack(message, false, true); // Requeue for retry
+            } catch (error) {
+              const redeliveryCount = incrementRedeliveryCount(message);
+
+              if (redeliveryCount >= this.retryConfig.maxRetries) {
+                // Send to DLQ
+                logger.error('Max retries exceeded, sending to DLQ', {
+                  eventId: message.properties.messageId,
+                  queueName: this.queueName,
+                  dlqName: this.dlqName,
+                  redeliveryCount,
+                  error: error instanceof Error ? error.message : String(error),
+                });
+
+                await ch.sendToQueue(this.dlqName, message.content, {
+                  persistent: true,
+                  headers: message.properties.headers,
+                });
+
+                ch.ack(message); // Remove from main queue
+              } else {
+                // Requeue for retry
+                logger.warn('Error processing event, requeuing', {
+                  eventId: message.properties.messageId,
+                  queueName: this.queueName,
+                  redeliveryCount,
+                  maxRetries: this.retryConfig.maxRetries,
+                  error: error instanceof Error ? error.message : String(error),
+                });
+                ch.nack(message, false, true);
+              }
             }
           },
           {

@@ -29,6 +29,11 @@ const envSchema = z.object({
 
   // Service-specific
   SERVICE_NAME: z.string().optional(),
+  
+  // JWT Configuration (for IAM service)
+  JWT_SECRET: z.string().min(32).optional(),
+  JWT_ACCESS_TOKEN_EXPIRY: z.string().default('15m').optional(),
+  REFRESH_TOKEN_EXPIRY: z.string().default('7d').optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
