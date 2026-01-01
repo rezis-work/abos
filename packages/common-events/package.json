@@ -1,0 +1,23 @@
+{
+  "name": "@common/events",
+  "version": "0.1.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.3",
+    "amqp-connection-manager": "^4.1.14"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.4",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0"
+  },
+  "peerDependencies": {
+    "@common/env": "workspace:*",
+    "@common/logger": "workspace:*"
+  }
+}
