@@ -1,0 +1,1 @@
+ALTER TABLE "memberships" ADD CONSTRAINT "memberships_building_unit_user_unique" UNIQUE("building_id","unit_id","user_id");

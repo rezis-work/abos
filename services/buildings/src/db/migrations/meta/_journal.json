@@ -1,0 +1,20 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1767363194565,
+      "tag": "0000_late_clint_barton",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1767367513910,
+      "tag": "0001_jazzy_kitty_pryde",
+      "breakpoints": true
+    }
+  ]
+}
