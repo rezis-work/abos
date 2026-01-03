@@ -117,7 +117,8 @@ export class EventConsumer {
             try {
               const event: BaseEvent = JSON.parse(message.content.toString());
 
-              // Check idempotency
+              // Fast-path idempotency check (optional optimization)
+              // Handlers should also implement atomic idempotency for defense in depth
               const isProcessed = await this.idempotencyStore.isProcessed(event.eventId);
               if (isProcessed) {
                 logger.info('Event already processed, skipping', {
@@ -141,17 +142,33 @@ export class EventConsumer {
               }
 
               // Process with retry
-              await retryWithBackoff(
-                async () => {
-                  await handler(event, message);
-                },
-                this.retryConfig
-              );
+              // Handlers should implement atomic idempotency (insert processed_events in same transaction)
+              // If handler throws 'EVENT_ALREADY_PROCESSED', we ACK without retry
+              try {
+                await retryWithBackoff(
+                  async () => {
+                    await handler(event, message);
+                  },
+                  this.retryConfig
+                );
 
-              // Mark as processed
-              await this.idempotencyStore.markProcessed(event.eventId);
+                // Mark as processed (backup, handlers should do this atomically)
+                await this.idempotencyStore.markProcessed(event.eventId);
 
-              ch.ack(message);
+                ch.ack(message);
+              } catch (handlerError: any) {
+                // If handler indicates event already processed, ACK without retry
+                if (handlerError?.message === 'EVENT_ALREADY_PROCESSED') {
+                  logger.info('Event already processed by handler, ACKing', {
+                    eventId: event.eventId,
+                    eventType: event.eventType,
+                  });
+                  ch.ack(message);
+                  return;
+                }
+                // Re-throw to trigger retry/DLQ
+                throw handlerError;
+              }
 
               logger.debug('Event processed successfully', {
                 eventId: event.eventId,
@@ -235,4 +252,5 @@ export async function createEventId(): Promise<string> {
 
 export { closeConnection };
 export * from './types';
+export * from './reliability';
 
