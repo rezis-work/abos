@@ -1,18 +1,14 @@
 import { EventConsumer } from "@common/events";
 import { createLogger } from "@common/logger";
 import { DatabaseIdempotencyStore } from "./idempotency.store";
-import { handleUserCreated } from "../handlers/user.created.handler";
 import { handleResidentVerified } from "../handlers/resident.verified.handler";
-import { handleTicketCreated } from "../handlers/ticket.created.handler";
-import { handleTicketAssigned } from "../handlers/ticket.assigned.handler";
-import { handleTicketStatusChanged } from "../handlers/ticket.status_changed.handler";
 
 const logger = createLogger("consumer-service");
 
-const QUEUE_NAME = "notifications.q";
+const QUEUE_NAME = "tickets.projections.q";
 
 /**
- * Initialize and start the event consumer.
+ * Initialize and start the event consumer for projection sync.
  */
 export function startConsumer(): void {
   logger.info("Initializing event consumer", { queueName: QUEUE_NAME });
@@ -29,13 +25,9 @@ export function startConsumer(): void {
   });
 
   // Register event handlers
-  // Note: eventType in BaseEvent is "user.created", not "user.created.v1"
-  // The version is in the event.version field, routing key is "user.created.v1"
-  consumer.on("user.created", handleUserCreated);
+  // Note: eventType in BaseEvent is "resident.verified", not "resident.verified.v1"
+  // The version is in the event.version field, routing key is "resident.verified.v1"
   consumer.on("resident.verified", handleResidentVerified);
-  consumer.on("ticket.created", handleTicketCreated);
-  consumer.on("ticket.assigned", handleTicketAssigned);
-  consumer.on("ticket.status_changed", handleTicketStatusChanged);
 
   // Start consuming first (this asserts the queue)
   consumer
@@ -46,22 +38,17 @@ export function startConsumer(): void {
       });
 
       // Bind queue to routing keys after queue is asserted
-      return Promise.all([
-        consumer.bind("user.created.v1"),
-        consumer.bind("resident.verified.v1"),
-        consumer.bind("ticket.created.v1"),
-        consumer.bind("ticket.assigned.v1"),
-        consumer.bind("ticket.status_changed.v1"),
-      ]);
+      return consumer.bind("resident.verified.v1");
     })
     .then(() => {
-      logger.info("Bound to all routing keys");
+      logger.info("Bound to resident.verified.v1");
     })
     .catch((error) => {
-      logger.error("Failed to start event consumer or bind queues", {
+      logger.error("Failed to start event consumer or bind queue", {
         queueName: QUEUE_NAME,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
     });
 }
+

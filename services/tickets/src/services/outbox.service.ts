@@ -44,7 +44,7 @@ export async function processOutbox(): Promise<void> {
         };
 
         // Publish to RabbitMQ with correlation IDs
-        // Map event type to routing key (e.g., 'building.created' -> 'building.created.v1')
+        // Map event type to routing key (e.g., 'ticket.created' -> 'ticket.created.v1')
         // Use versioned routing key if version is specified
         const routingKey = event.version
           ? (`${event.eventType}.${event.version}` as any)

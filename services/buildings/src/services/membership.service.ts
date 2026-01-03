@@ -92,7 +92,6 @@ export async function createMembership(
           eventType: "resident.verified",
           version: "v1",
           payload: {
-            eventId: verifiedEventId,
             userId: updatedMembership.userId,
             buildingId: updatedMembership.buildingId,
             unitId: updatedMembership.unitId,
@@ -100,7 +99,7 @@ export async function createMembership(
             occurredAt:
               updatedMembership.verifiedAt?.toISOString() ||
               new Date().toISOString(),
-            correlationId, // Store correlation ID in payload
+            correlationId, // Store correlation ID in payload (will be moved to metadata by outbox service)
           },
         });
       }
@@ -156,14 +155,13 @@ export async function createMembership(
         eventType: "resident.verified",
         version: "v1",
         payload: {
-          eventId: verifiedEventId,
           userId: newMembership.userId,
           buildingId: newMembership.buildingId,
           unitId: newMembership.unitId,
           roleInBuilding: newMembership.roleInBuilding,
           occurredAt:
             newMembership.verifiedAt?.toISOString() || new Date().toISOString(),
-          correlationId, // Store correlation ID in payload
+          correlationId, // Store correlation ID in payload (will be moved to metadata by outbox service)
         },
       });
     }
@@ -248,7 +246,6 @@ export async function verifyMembership(
       eventType: "resident.verified",
       version: "v1",
       payload: {
-        eventId: verifiedEventId,
         userId: updatedMembership.userId,
         buildingId: updatedMembership.buildingId,
         unitId: updatedMembership.unitId,
@@ -256,7 +253,7 @@ export async function verifyMembership(
         occurredAt:
           updatedMembership.verifiedAt?.toISOString() ||
           new Date().toISOString(),
-        correlationId, // Store correlation ID in payload
+        correlationId, // Store correlation ID in payload (will be moved to metadata by outbox service)
       },
     });
 
