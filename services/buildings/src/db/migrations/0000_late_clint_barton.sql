@@ -1,7 +1,32 @@
+-- Create enum if it doesn't exist
 DO $$ BEGIN
  CREATE TYPE "membership_status" AS ENUM('pending', 'verified', 'rejected');
 EXCEPTION
  WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+-- Add missing enum values if enum was created by another service with fewer values
+DO $$ 
+BEGIN
+  -- Add 'pending' if it doesn't exist
+  IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'membership_status') AND
+     NOT EXISTS (
+       SELECT 1 FROM pg_enum 
+       WHERE enumlabel = 'pending' 
+       AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'membership_status')
+     ) THEN
+    ALTER TYPE "membership_status" ADD VALUE 'pending';
+  END IF;
+  
+  -- Add 'rejected' if it doesn't exist  
+  IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'membership_status') AND
+     NOT EXISTS (
+       SELECT 1 FROM pg_enum 
+       WHERE enumlabel = 'rejected' 
+       AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'membership_status')
+     ) THEN
+    ALTER TYPE "membership_status" ADD VALUE 'rejected';
+  END IF;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
