@@ -48,12 +48,6 @@ importers:
 
   packages/common-events:
     dependencies:
-      '@common/env':
-        specifier: workspace:*
-        version: link:../common-env
-      '@common/logger':
-        specifier: workspace:*
-        version: link:../common-logger
       amqp-connection-manager:
         specifier: ^4.1.14
         version: 4.1.15(amqplib@0.10.9)
@@ -61,6 +55,12 @@ importers:
         specifier: ^0.10.3
         version: 0.10.9
     devDependencies:
+      '@common/env':
+        specifier: workspace:*
+        version: link:../common-env
+      '@common/logger':
+        specifier: workspace:*
+        version: link:../common-logger
       '@types/amqplib':
         specifier: ^0.10.4
         version: 0.10.8
@@ -73,9 +73,6 @@ importers:
 
   packages/common-http:
     dependencies:
-      '@common/logger':
-        specifier: workspace:*
-        version: link:../common-logger
       express:
         specifier: ^4.18.2
         version: 4.22.1
@@ -89,6 +86,9 @@ importers:
         specifier: ^3.22.4
         version: 3.25.76
     devDependencies:
+      '@common/logger':
+        specifier: workspace:*
+        version: link:../common-logger
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.25
@@ -104,13 +104,13 @@ importers:
 
   packages/common-logger:
     dependencies:
-      '@common/env':
-        specifier: workspace:*
-        version: link:../common-env
       winston:
         specifier: ^3.11.0
         version: 3.19.0
     devDependencies:
+      '@common/env':
+        specifier: workspace:*
+        version: link:../common-env
       '@types/node':
         specifier: ^20.10.0
         version: 20.19.27
