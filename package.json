@@ -14,6 +14,8 @@
     "test:integration:down": "docker compose -f docker-compose.test.yml down -v",
     "test:integration": "node scripts/run-integration-tests.js",
     "typecheck": "turbo run typecheck",
+    "docker:build": "docker compose build",
+    "docker:build:no-cache": "docker compose build --no-cache",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f"
