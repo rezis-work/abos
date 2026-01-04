@@ -23,9 +23,9 @@ app.use(express.json());
 app.use(correlationId());
 app.use(requestLogger(logger));
 
-// Routes
-app.get("/health", healthRoute);
-app.use("/", ticketsRoutes);
+// Routes - mount under /tickets prefix for nginx routing
+app.get("/tickets/health", healthRoute);
+app.use("/tickets", ticketsRoutes);
 
 // Error handling (must be last)
 app.use(errorHandler);

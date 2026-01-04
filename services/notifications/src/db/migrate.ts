@@ -83,8 +83,26 @@ async function runMigrations() {
       const filePath = join(migrationsDir, migrationFile);
       const migrationSQL = readFileSync(filePath, "utf-8");
       logger.info("Executing migration", { file: migrationFile });
-      await sql.unsafe(migrationSQL);
-      logger.info("Migration completed", { file: migrationFile });
+      try {
+        await sql.unsafe(migrationSQL);
+        logger.info("Migration completed", { file: migrationFile });
+      } catch (error: any) {
+        // Check if error is about duplicate type/constraint (expected in concurrent scenarios)
+        if (
+          error?.code === "23505" || // Unique violation
+          error?.code === "42P07" || // Duplicate object
+          (error?.message && error.message.includes("already exists"))
+        ) {
+          logger.warn("Migration encountered 'already exists' error (safe to ignore)", {
+            file: migrationFile,
+            error: error.message,
+          });
+          // Continue - this is expected when migrations run concurrently
+        } else {
+          // Re-throw other errors
+          throw error;
+        }
+      }
     }
 
     logger.info("All migrations completed successfully");

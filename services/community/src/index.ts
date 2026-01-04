@@ -23,9 +23,9 @@ app.use(express.json());
 app.use(correlationId());
 app.use(requestLogger(logger));
 
-// Routes
-app.get("/health", healthRoute);
-app.use("/", postsRoutes);
+// Routes - mount under /community prefix for nginx routing
+app.get("/community/health", healthRoute);
+app.use("/community", postsRoutes);
 
 // Error handling (must be last)
 app.use(errorHandler);

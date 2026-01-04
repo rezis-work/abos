@@ -22,8 +22,8 @@ app.use(express.json());
 app.use(correlationId());
 app.use(requestLogger(logger));
 
-// Routes
-app.get("/health", healthRoute);
+// Routes - mount under /notifications prefix for nginx routing
+app.get("/notifications/health", healthRoute);
 app.use("/notifications", notificationsRoutes);
 
 // Error handling (must be last)

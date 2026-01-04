@@ -22,8 +22,8 @@ app.use(express.json());
 app.use(correlationId());
 app.use(requestLogger(logger));
 
-// Routes
-app.get("/health", healthRoute);
+// Routes - mount under /buildings prefix for nginx routing
+app.get("/buildings/health", healthRoute);
 app.use("/buildings", buildingsRoutes);
 
 // Debug endpoint to check JWT_SECRET (remove in production)
