@@ -6,6 +6,7 @@ import { handleResidentVerified } from "../handlers/resident.verified.handler";
 import { handleTicketCreated } from "../handlers/ticket.created.handler";
 import { handleTicketAssigned } from "../handlers/ticket.assigned.handler";
 import { handleTicketStatusChanged } from "../handlers/ticket.status_changed.handler";
+import { handleCommentCreated } from "../handlers/comment.created.handler";
 
 const logger = createLogger("consumer-service");
 
@@ -36,6 +37,7 @@ export function startConsumer(): void {
   consumer.on("ticket.created", handleTicketCreated);
   consumer.on("ticket.assigned", handleTicketAssigned);
   consumer.on("ticket.status_changed", handleTicketStatusChanged);
+  consumer.on("comment.created", handleCommentCreated);
 
   // Start consuming first (this asserts the queue)
   consumer
@@ -52,6 +54,7 @@ export function startConsumer(): void {
         consumer.bind("ticket.created.v1"),
         consumer.bind("ticket.assigned.v1"),
         consumer.bind("ticket.status_changed.v1"),
+        consumer.bind("comment.created.v1"),
       ]);
     })
     .then(() => {

@@ -76,3 +76,19 @@ export type TicketAssignedV1Payload = z.infer<typeof ticketAssignedV1Schema>;
 export type TicketStatusChangedV1Payload = z.infer<
   typeof ticketStatusChangedV1Schema
 >;
+
+/**
+ * Schema for comment.created.v1 event payload
+ * Note: eventId and correlationId are in BaseEvent metadata, not in payload
+ */
+export const commentCreatedV1Schema = z.object({
+  commentId: z.string().uuid(),
+  postId: z.string().uuid(),
+  buildingId: z.string().uuid(),
+  createdByUserId: z.string().uuid(),
+  postAuthorUserId: z.string().uuid(), // Include for notifications
+  createdAt: z.string(),
+  occurredAt: z.string(),
+});
+
+export type CommentCreatedV1Payload = z.infer<typeof commentCreatedV1Schema>;
