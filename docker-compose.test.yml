@@ -2,6 +2,8 @@ services:
   postgres-test:
     image: postgres:15-alpine
     container_name: abos-postgres-test
+    ports:
+      - "5433:5432"  # Expose postgres port for test connections
     environment:
       POSTGRES_USER: test
       POSTGRES_PASSWORD: test
@@ -19,6 +21,9 @@ services:
   rabbitmq-test:
     image: rabbitmq:3.12-management-alpine
     container_name: abos-rabbitmq-test
+    ports:
+      - "5673:5672"  # Expose RabbitMQ port for test connections
+      - "15673:15672"  # Expose management UI port
     environment:
       RABBITMQ_DEFAULT_USER: test
       RABBITMQ_DEFAULT_PASS: test
@@ -223,6 +228,43 @@ services:
       retries: 20
       start_period: 120s
 
+  access:
+    build:
+      context: .
+      dockerfile: ./services/access/Dockerfile
+    container_name: abos-access-test
+    environment:
+      - NODE_ENV=test
+      - PORT=3006
+      - SERVICE_NAME=access-service
+      - DATABASE_URL=postgresql://test:test@postgres-test:5432/postgres
+      - POSTGRES_HOST=postgres-test
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+      - POSTGRES_DB=access_db
+      - RABBITMQ_URL=amqp://test:test@rabbitmq-test:5672
+      - REDIS_URL=redis://redis-test:6379
+    networks:
+      - abos-test-network
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      rabbitmq-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:3006/access/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 120s
+
   nginx:
     image: nginx:alpine
     container_name: abos-nginx-test
@@ -240,6 +282,8 @@ services:
       tickets:
         condition: service_healthy
       community:
+        condition: service_healthy
+      access:
         condition: service_healthy
     networks:
       - abos-test-network

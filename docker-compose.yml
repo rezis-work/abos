@@ -192,6 +192,34 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  access:
+    build:
+      context: .
+      dockerfile: ./services/access/Dockerfile
+    container_name: abos-access
+    environment:
+      - NODE_ENV=production
+      - PORT=3006
+      - SERVICE_NAME=access-service
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=access_db
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - REDIS_URL=redis://redis:6379
+    networks:
+      - abos-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
   nginx:
     image: nginx:alpine
     container_name: abos-nginx
@@ -205,6 +233,7 @@ services:
       - notifications
       - tickets
       - community
+      - access
     networks:
       - abos-network
     restart: unless-stopped
