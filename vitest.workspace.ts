@@ -1,17 +1,16 @@
-import { defineWorkspace } from 'vitest/config';
+import { defineWorkspace } from "vitest/config";
 
 export default defineWorkspace([
-  'services/iam',
-  'services/buildings',
-  'services/notifications',
-  'services/tickets',
-  'services/community',
+  "services/iam",
+  "services/buildings",
+  "services/notifications",
+  "services/tickets",
+  "services/community",
   {
     // Root-level integration tests
     test: {
-      include: ['tests/**/*.test.ts'],
-      name: 'integration',
+      include: ["tests/**/*.test.ts"],
+      name: "integration",
     },
   },
 ]);
-

@@ -2,7 +2,7 @@
 set -e
 
 # Small delay to stagger DNS lookups when multiple services start simultaneously
-sleep 4
+sleep 12
 
 echo "Running database migrations..."
 node dist/db/migrate.js

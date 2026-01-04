@@ -162,7 +162,37 @@ async function runMigrations() {
     try {
       for (const { file, sql: migrationSQL } of migrationSQLs) {
         logger.info("Executing migration", { file });
-        await sql.unsafe(migrationSQL);
+        
+        // Split SQL into individual statements (by --> statement-breakpoint or semicolon)
+        const statements = migrationSQL
+          .split(/--> statement-breakpoint|;\s*$/gm)
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0 && !s.startsWith("--"));
+        
+        for (const statement of statements) {
+          try {
+            if (statement.trim()) {
+              await sql.unsafe(statement + ";");
+            }
+          } catch (error: any) {
+            // Handle "already exists" errors gracefully (e.g., types, tables that were created by other services)
+            const errorCode = error?.code;
+            const errorMessage = error?.message || String(error);
+            
+            if (errorCode === "42710" || errorMessage?.includes("already exists")) {
+              logger.warn("Statement skipped - object already exists", {
+                file,
+                error: errorMessage,
+                code: errorCode,
+                statement: statement.substring(0, 100), // Log first 100 chars
+              });
+              // Continue to next statement
+              continue;
+            }
+            // Re-throw other errors
+            throw error;
+          }
+        }
         logger.info("Migration completed", { file });
       }
     } finally {
