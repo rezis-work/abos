@@ -1,239 +1,329 @@
 # ABOS Platform
 
-Microservices platform foundation built with Express + TypeScript + Node.js v22.15.1.
+A microservices-based building management platform built with Express, TypeScript, and Node.js.
 
-## Architecture
+## 🏗️ What is ABOS?
 
-This platform follows a microservices architecture with:
+ABOS is a comprehensive platform for managing residential buildings, including:
+- **User authentication & authorization** (IAM)
+- **Building & unit management**
+- **Maintenance ticket system**
+- **Community posts & discussions**
+- **Visitor pass management**
+- **Notifications**
 
-- **Monorepo structure** using Turborepo + pnpm workspaces
-- **Shared packages** for common functionality
-- **Event-driven communication** via RabbitMQ
-- **Per-service databases** using PostgreSQL
-- **Redis** for caching and rate limiting
+## 🚀 Quick Start
 
-## Project Structure
-
-```
-abos/
-├── packages/              # Shared packages
-│   ├── @common/env       # Environment variable validation
-│   ├── @common/logger    # Structured logging (Winston)
-│   ├── @common/http      # Express utilities & middleware
-│   └── @common/events    # RabbitMQ client & event handling
-├── services/             # Microservices
-│   └── template-service  # Hello world service template
-├── docs/                 # Architecture documentation
-└── docker-compose.yml    # Infrastructure services
-```
-
-## Prerequisites
+### Prerequisites
 
 - Node.js >= 22.15.1
 - pnpm >= 8.0.0
 - Docker & Docker Compose
 
-## Getting Started
-
-### 1. Install Dependencies
+### Installation
 
 ```bash
+# Install dependencies
 pnpm install
-```
 
-### 2. Start Infrastructure Services
-
-```bash
-pnpm docker:up
-```
-
-This starts:
-- PostgreSQL (port 5432)
-- RabbitMQ (ports 5672, 15672 for management UI)
-- Redis (port 6379)
-
-### 3. Configure Environment Variables
-
-Copy `.env.example` to `.env` and adjust as needed:
-
-```bash
-cp .env.example .env
-```
-
-### 4. Build Shared Packages
-
-```bash
+# Build all packages and services
 pnpm build
 ```
 
-### 5. Run Template Service
+### Start Development Environment
 
 ```bash
-cd services/template-service
+# Start infrastructure services (PostgreSQL, RabbitMQ, Redis)
+pnpm docker:up
+
+# Start all services in development mode
 pnpm dev
 ```
 
-Or from root:
+### Start Production Environment
 
 ```bash
-pnpm dev
+# Build production Docker images
+pnpm docker:build
+
+# Start all services
+pnpm docker:up
 ```
 
-### 6. Test Health Endpoint
+## 📦 Services
+
+The platform consists of 6 microservices:
+
+| Service | Port | Description |
+|---------|------|-------------|
+| **IAM** | 3001 | User authentication, registration, JWT tokens |
+| **Buildings** | 3002 | Building & unit management, resident verification |
+| **Notifications** | 3003 | User notifications (event-driven) |
+| **Tickets** | 3004 | Maintenance ticket management |
+| **Community** | 3005 | Posts, comments, building discussions |
+| **Access** | 3006 | Visitor pass management |
+
+All services are accessible through the **Nginx Gateway** on port **80**.
+
+## 🎯 Key Features
+
+### Authentication & Authorization
+- User registration and login
+- JWT-based authentication (access + refresh tokens)
+- Role-based access control (RBAC)
+- Rate limiting on auth endpoints
+
+### Building Management
+- Create and manage buildings
+- Unit management (bulk creation)
+- Resident membership and verification
+- Access control per building
+
+### Maintenance Tickets
+- Create tickets (residents)
+- Assign tickets to providers (admins)
+- Track ticket status (open → in_progress → resolved → closed)
+- Add comments to tickets
+
+### Community Features
+- Create posts in building communities
+- Comment on posts
+- Verified members only (ensures building residents)
+
+### Visitor Passes
+- Create visitor passes (residents)
+- Time-based validity windows
+- Mark passes as used (guards/admins)
+- Revoke passes
+
+### Notifications
+- Event-driven notifications
+- Real-time updates for tickets, passes, posts
+- Mark as read functionality
+
+## 🏃 Available Commands
+
+### Development
 
 ```bash
-curl http://localhost:3000/health
+pnpm dev              # Start all services in watch mode
+pnpm build            # Build all packages and services
+pnpm lint             # Lint all code
+pnpm typecheck        # Type check all code
 ```
 
-Expected response:
+### Testing
 
-```json
-{
-  "status": "ok",
-  "service": "template-service",
-  "timestamp": "2024-01-01T00:00:00.000Z",
-  "uptime": 123.456
-}
+```bash
+pnpm test             # Run all tests
+pnpm test:unit        # Run unit tests only
+pnpm test:integration # Run integration tests (requires Docker)
 ```
 
-## Available Scripts
+### Docker
 
-### Root Level
+```bash
+pnpm docker:up              # Start infrastructure services
+pnpm docker:down            # Stop infrastructure services
+pnpm docker:build           # Build production images
+pnpm docker:build:no-cache  # Build without cache
+pnpm docker:logs            # View logs
+```
 
-- `pnpm dev` - Start all services in development mode
-- `pnpm build` - Build all packages and services
-- `pnpm lint` - Lint all packages and services
-- `pnpm test` - Run tests across all packages and services
-- `pnpm docker:up` - Start infrastructure services
-- `pnpm docker:down` - Stop infrastructure services
-- `pnpm docker:logs` - View infrastructure logs
+### Integration Tests
 
-### Package/Service Level
+```bash
+pnpm test:integration:up    # Start test Docker stack
+pnpm test:integration:down  # Stop test Docker stack
+pnpm test:integration       # Run full integration test suite
+```
 
-Each package and service has its own scripts:
-- `build` - Compile TypeScript
-- `dev` - Watch mode for development
+## 🏛️ Architecture
 
-## Infrastructure Services
+### Microservices Architecture
 
-### PostgreSQL
+```
+┌─────────────┐
+│   Nginx     │  API Gateway (port 80)
+│   Gateway   │
+└──────┬──────┘
+       │
+   ┌───┴─────────────────────────────────────┐
+   │                                           │
+┌──▼──┐  ┌──────────┐  ┌──────────┐  ┌──────┐
+│ IAM │  │Buildings│  │Tickets   │  │ ...  │
+└──┬──┘  └────┬─────┘  └────┬─────┘  └──┬───┘
+   │          │             │           │
+   └──────────┴─────────────┴───────────┘
+              │
+         ┌────▼─────┐
+         │ RabbitMQ │  Event Bus
+         └──────────┘
+```
 
-- **Host:** localhost
-- **Port:** 5432
-- **User:** postgres
-- **Password:** postgres
-- **Management:** Connect via psql or any PostgreSQL client
+### Technology Stack
 
-### RabbitMQ
+- **Runtime:** Node.js 22.15.1
+- **Language:** TypeScript
+- **Framework:** Express.js
+- **Database:** PostgreSQL (per-service)
+- **Message Queue:** RabbitMQ
+- **Cache:** Redis
+- **Gateway:** Nginx
+- **Build Tool:** Turborepo
+- **Package Manager:** pnpm
 
-- **AMQP Port:** 5672
-- **Management UI:** http://localhost:15672
-- **Credentials:** guest / guest
+### Event-Driven Communication
+
+Services communicate via events published to RabbitMQ:
 - **Exchange:** `app.events` (topic exchange)
+- **Pattern:** Event-driven architecture with outbox pattern
+- **Reliability:** Idempotency handling, retry logic
 
-### Redis
+## 📁 Project Structure
 
-- **Port:** 6379
-- **No password** (development only)
-
-## Shared Packages
-
-### @common/env
-
-Environment variable validation using Zod.
-
-```typescript
-import { getEnv } from '@common/env';
-
-const env = getEnv();
-console.log(env.PORT);
+```
+abos/
+├── packages/              # Shared packages
+│   ├── common-env        # Environment validation
+│   ├── common-logger      # Structured logging
+│   ├── common-http        # Express utilities
+│   └── common-events      # RabbitMQ client
+├── services/             # Microservices
+│   ├── iam              # Identity & Access Management
+│   ├── buildings        # Building & unit management
+│   ├── notifications    # Notification service
+│   ├── tickets          # Ticket management
+│   ├── community        # Community posts
+│   └── access           # Visitor passes
+├── tests/               # Integration tests
+├── infra/               # Infrastructure configs
+│   └── nginx/          # Nginx configuration
+└── docker-compose.yml   # Production services
 ```
 
-### @common/logger
+## 🔐 User Roles
 
-Structured logging with Winston.
+- **resident** - Basic user, can create tickets, posts, visitor passes
+- **building_admin** - Can manage their building (units, memberships, tickets)
+- **manager** - Platform-level admin, can manage multiple buildings
+- **provider** - Service provider, can be assigned tickets
+- **super_admin** - Full platform access
 
-```typescript
-import { createLogger } from '@common/logger';
+## 🌐 API Endpoints
 
-const logger = createLogger('my-service');
-logger.info('Service started', { port: 3000 });
-```
+All endpoints are prefixed with the service name (e.g., `/iam/auth/login`, `/buildings/...`).
 
-### @common/http
+### Health Checks
+- `GET /iam/health`
+- `GET /buildings/health`
+- `GET /notifications/health`
+- `GET /tickets/health`
+- `GET /community/health`
+- `GET /access/health`
 
-Express utilities and middleware.
+### Swagger Documentation
+Each service provides Swagger UI documentation:
+- `GET /iam/docs`
+- `GET /buildings/docs`
+- `GET /notifications/docs`
+- `GET /tickets/docs`
+- `GET /community/docs`
+- `GET /access/docs`
 
-```typescript
-import express from 'express';
-import { errorHandler, requestLogger, healthCheckRoute } from '@common/http';
-import { createLogger } from '@common/logger';
+## 🔧 Environment Variables
 
-const app = express();
-const logger = createLogger('my-service');
+Each service uses environment variables for configuration. See `.env.example` files in each service directory.
 
-app.use(requestLogger(logger));
-app.get('/health', healthCheckRoute('my-service'));
-app.use(errorHandler);
-```
+**Common variables:**
+- `NODE_ENV` - Environment (development/production/test)
+- `PORT` - Service port
+- `DATABASE_URL` - PostgreSQL connection string
+- `RABBITMQ_URL` - RabbitMQ connection string
+- `REDIS_URL` - Redis connection string
+- `JWT_SECRET` - Secret for JWT token signing
 
-### @common/events
-
-RabbitMQ event publishing and consumption.
-
-```typescript
-import { EventPublisher, EventConsumer, createEventId } from '@common/events';
-
-// Publishing
-const publisher = new EventPublisher();
-await publisher.publish('user.created', {
-  eventId: await createEventId(),
-  version: 'v1',
-  eventType: 'user.created',
-  timestamp: new Date().toISOString(),
-  payload: { userId: '123', email: 'user@example.com' },
-});
-
-// Consuming
-const consumer = new EventConsumer('my-service.q');
-await consumer.bind('user.*');
-consumer.on('user.created', async (event) => {
-  console.log('User created:', event.payload);
-});
-await consumer.start();
-```
-
-## Creating a New Service
-
-1. Copy `services/template-service` to `services/your-service`
-2. Update `package.json` name and dependencies
-3. Update environment variables in `.env.example`
-4. Implement your service logic
-5. Add service-specific routes and handlers
-
-## Development Workflow
-
-1. Start infrastructure: `pnpm docker:up`
-2. Build packages: `pnpm build`
-3. Run services: `pnpm dev`
-4. Make changes - TypeScript will recompile automatically
-5. Test endpoints using curl, Postman, or your API client
-
-## Documentation
+## 📚 Documentation
 
 - [Microservices Architecture](./docs/microservices-architecture.md)
 - [RabbitMQ Integration](./docs/rabbitmq-integration.md)
 - [Tech Stack & Database](./docs/tech-stack-and-database.md)
 
-## Next Steps
+## 🧪 Testing
 
-- Implement IAM service
-- Set up database migrations
-- Add authentication middleware
-- Implement event-driven workflows
-- Add monitoring and observability
+### Unit Tests
+```bash
+pnpm test:unit
+```
 
-## License
+### Integration Tests
+Integration tests require the Docker test stack to be running:
+
+```bash
+# Start test stack
+pnpm test:integration:up
+
+# Run tests
+pnpm test:integration
+
+# Stop test stack
+pnpm test:integration:down
+```
+
+## 🐳 Docker
+
+### Development
+```bash
+docker compose up -d
+```
+
+### Production
+```bash
+docker compose -f docker-compose.yml up -d --build
+```
+
+### Test Environment
+```bash
+docker compose -f docker-compose.test.yml up -d --build
+```
+
+## 📝 Development Workflow
+
+1. **Start infrastructure:**
+   ```bash
+   pnpm docker:up
+   ```
+
+2. **Build packages:**
+   ```bash
+   pnpm build
+   ```
+
+3. **Start services:**
+   ```bash
+   pnpm dev
+   ```
+
+4. **Make changes** - TypeScript will recompile automatically
+
+5. **Test endpoints** using curl, Postman, or your API client
+
+## 🚨 Troubleshooting
+
+### Services won't start
+- Check Docker is running: `docker ps`
+- Check ports aren't in use
+- Check logs: `pnpm docker:logs`
+
+### Database connection errors
+- Ensure PostgreSQL is running: `docker ps | grep postgres`
+- Check database credentials in `.env` files
+- Verify database exists (services create them automatically)
+
+### RabbitMQ connection errors
+- Ensure RabbitMQ is running: `docker ps | grep rabbitmq`
+- Check RabbitMQ management UI: http://localhost:15672 (guest/guest)
+
+## 📄 License
 
 Private - Internal use only
-
