@@ -24,6 +24,9 @@ RUN pnpm build --filter=tickets-service
 # Production stage
 FROM node:22-alpine AS production
 
+# Install curl for healthchecks
+RUN apk add --no-cache curl
+
 WORKDIR /app
 
 # Install pnpm

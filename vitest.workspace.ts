@@ -6,5 +6,12 @@ export default defineWorkspace([
   'services/notifications',
   'services/tickets',
   'services/community',
+  {
+    // Root-level integration tests
+    test: {
+      include: ['tests/**/*.test.ts'],
+      name: 'integration',
+    },
+  },
 ]);
 

@@ -24,6 +24,9 @@ RUN pnpm build --filter=notifications-service
 # Production stage
 FROM node:22-alpine AS production
 
+# Install curl for healthchecks
+RUN apk add --no-cache curl
+
 WORKDIR /app
 
 # Install pnpm
