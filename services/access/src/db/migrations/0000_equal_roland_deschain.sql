@@ -50,10 +50,7 @@ CREATE TABLE IF NOT EXISTS "visitor_passes" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'visitor_pass_events_visitor_pass_id_visitor_passes_id_fk') THEN ALTER TABLE "visitor_pass_events" ADD CONSTRAINT "visitor_pass_events_visitor_pass_id_visitor_passes_id_fk" FOREIGN KEY ("visitor_pass_id") REFERENCES "public"."visitor_passes"("id") ON DELETE cascade ON UPDATE no action; END IF;
-END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'visitor_pass_events_visitor_pass_id_visitor_passes_id_fk') THEN ALTER TABLE "visitor_pass_events" ADD CONSTRAINT "visitor_pass_events_visitor_pass_id_visitor_passes_id_fk" FOREIGN KEY ("visitor_pass_id") REFERENCES "public"."visitor_passes"("id") ON DELETE cascade ON UPDATE no action; END IF; END $$;
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "access_projection_user_id_idx" ON "building_memberships_projection" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "access_projection_building_id_idx" ON "building_memberships_projection" USING btree ("building_id");--> statement-breakpoint
