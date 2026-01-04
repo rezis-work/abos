@@ -1,14 +1,18 @@
 -- Create enums with idempotency
-DO $$ BEGIN
- CREATE TYPE "public"."role_in_building" AS ENUM('resident', 'admin');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;--> statement-breakpoint
-DO $$ BEGIN
- CREATE TYPE "public"."visitor_pass_status" AS ENUM('active', 'used', 'revoked');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;--> statement-breakpoint
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'role_in_building') THEN
+        CREATE TYPE "public"."role_in_building" AS ENUM('resident', 'admin');
+    END IF;
+END $$;
+--> statement-breakpoint
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'visitor_pass_status') THEN
+        CREATE TYPE "public"."visitor_pass_status" AS ENUM('active', 'used', 'revoked');
+    END IF;
+END $$;
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "building_memberships_projection" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
