@@ -11,6 +11,7 @@ import {
 } from "@common/http";
 import { healthRoute } from "./routes/health";
 import postsRoutes from "./routes/posts";
+import swaggerRoutes from "./routes/swagger";
 import { startConsumer } from "./services/consumer.service";
 import { startOutboxWorker } from "./services/outbox.service";
 
@@ -25,6 +26,7 @@ app.use(requestLogger(logger));
 
 // Routes - mount under /community prefix for nginx routing
 app.get("/community/health", healthRoute);
+app.use("/community", swaggerRoutes); // Mount swagger routes first to avoid route conflicts
 app.use("/community", postsRoutes);
 
 // Error handling (must be last)

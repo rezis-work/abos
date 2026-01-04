@@ -12,6 +12,7 @@ import {
 import { healthRoute } from "./routes/health";
 import authRoutes from "./routes/auth";
 import meRoutes from "./routes/me";
+import swaggerRoutes from "./routes/swagger";
 import { startOutboxWorker } from "./services/outbox.service";
 
 const env = getEnv();
@@ -27,6 +28,7 @@ app.use(requestLogger(logger));
 app.get("/iam/health", healthRoute);
 app.use("/iam/auth", authRoutes);
 app.use("/iam", meRoutes);
+app.use("/iam", swaggerRoutes);
 
 // Error handling (must be last)
 app.use(errorHandler);
