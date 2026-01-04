@@ -11,6 +11,7 @@ import {
 } from "@common/http";
 import { healthRoute } from "./routes/health";
 import notificationsRoutes from "./routes/notifications";
+import swaggerRoutes from "./routes/swagger";
 import { startConsumer } from "./services/consumer.service";
 
 const env = getEnv();
@@ -24,6 +25,7 @@ app.use(requestLogger(logger));
 
 // Routes - mount under /notifications prefix for nginx routing
 app.get("/notifications/health", healthRoute);
+app.use("/notifications", swaggerRoutes); // Mount swagger routes first to avoid route conflicts
 app.use("/notifications", notificationsRoutes);
 
 // Error handling (must be last)

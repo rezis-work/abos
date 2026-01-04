@@ -11,6 +11,7 @@ import {
 } from "@common/http";
 import { healthRoute } from "./routes/health";
 import buildingsRoutes from "./routes/buildings";
+import swaggerRoutes from "./routes/swagger";
 import { startOutboxWorker } from "./services/outbox.service";
 
 const env = getEnv();
@@ -24,6 +25,7 @@ app.use(requestLogger(logger));
 
 // Routes - mount under /buildings prefix for nginx routing
 app.get("/buildings/health", healthRoute);
+app.use("/buildings", swaggerRoutes); // Mount swagger routes first to avoid route conflicts
 app.use("/buildings", buildingsRoutes);
 
 // Debug endpoint to check JWT_SECRET (remove in production)

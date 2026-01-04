@@ -104,5 +104,113 @@ describe('Gateway Health Endpoints', () => {
       expect(data.uptime).toBeDefined();
     });
   });
+
+  describe('Access Service', () => {
+    it('should route /access/health through nginx', async () => {
+      const result = await fetchHealth('/access/health');
+      
+      expect(result.status).toBe(200);
+      expect(typeof result.data).toBe('object');
+      const data = result.data as HealthResponse;
+      expect(data.status).toBe('ok');
+      expect(data.service).toBe('access-service');
+      expect(data.timestamp).toBeDefined();
+      expect(data.uptime).toBeDefined();
+    });
+  });
+});
+
+describe('OpenAPI Endpoints', () => {
+  describe('IAM Service', () => {
+    it('should return 200 and valid OpenAPI JSON for /iam/openapi.json', async () => {
+      const response = await fetch(`${BASE_URL}/iam/openapi.json`);
+      
+      expect(response.status).toBe(200);
+      expect(response.headers.get('content-type')).toContain('application/json');
+      
+      const data = await response.json();
+      expect(data).toHaveProperty('openapi');
+      expect(data.openapi).toBe('3.0.0');
+      expect(data).toHaveProperty('info');
+      expect(data.info.title).toBe('IAM API');
+      expect(data.info.version).toBe('1.0.0');
+      expect(data).toHaveProperty('servers');
+      expect(data.servers[0].url).toBe('/iam');
+      expect(data).toHaveProperty('paths');
+      expect(data.paths).toHaveProperty('/health');
+      expect(data).toHaveProperty('components');
+      expect(data.components).toHaveProperty('securitySchemes');
+      expect(data.components.securitySchemes).toHaveProperty('bearerAuth');
+    });
+
+    it('should return 200 for /iam/docs (Swagger UI)', async () => {
+      const response = await fetch(`${BASE_URL}/iam/docs`);
+      
+      expect(response.status).toBe(200);
+      expect(response.headers.get('content-type')).toContain('text/html');
+    });
+  });
+
+  describe('Buildings Service', () => {
+    it('should return 200 and valid OpenAPI JSON for /buildings/openapi.json', async () => {
+      const response = await fetch(`${BASE_URL}/buildings/openapi.json`);
+      
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toHaveProperty('openapi');
+      expect(data.info.title).toBe('Buildings API');
+    });
+  });
+
+  describe('Notifications Service', () => {
+    it('should return 200 and valid OpenAPI JSON for /notifications/openapi.json', async () => {
+      const response = await fetch(`${BASE_URL}/notifications/openapi.json`);
+      
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toHaveProperty('openapi');
+      expect(data.info.title).toBe('Notifications API');
+    });
+  });
+
+  describe('Tickets Service', () => {
+    it('should return 200 and valid OpenAPI JSON for /tickets/openapi.json', async () => {
+      const response = await fetch(`${BASE_URL}/tickets/openapi.json`);
+      
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toHaveProperty('openapi');
+      expect(data.info.title).toBe('Tickets API');
+    });
+  });
+
+  describe('Community Service', () => {
+    it('should return 200 and valid OpenAPI JSON for /community/openapi.json', async () => {
+      const response = await fetch(`${BASE_URL}/community/openapi.json`);
+      
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toHaveProperty('openapi');
+      expect(data.info.title).toBe('Community API');
+    });
+  });
+
+  describe('Access Service', () => {
+    it('should return 200 and valid OpenAPI JSON for /access/openapi.json', async () => {
+      const response = await fetch(`${BASE_URL}/access/openapi.json`);
+      
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toHaveProperty('openapi');
+      expect(data.info.title).toBe('Access API');
+    });
+
+    it('should return 200 for /access/docs (Swagger UI)', async () => {
+      const response = await fetch(`${BASE_URL}/access/docs`);
+      
+      expect(response.status).toBe(200);
+      expect(response.headers.get('content-type')).toContain('text/html');
+    });
+  });
 });
 
