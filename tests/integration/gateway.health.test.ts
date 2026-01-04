@@ -104,6 +104,20 @@ describe('Gateway Health Endpoints', () => {
       expect(data.uptime).toBeDefined();
     });
   });
+
+  describe('Access Service', () => {
+    it('should route /access/health through nginx', async () => {
+      const result = await fetchHealth('/access/health');
+      
+      expect(result.status).toBe(200);
+      expect(typeof result.data).toBe('object');
+      const data = result.data as HealthResponse;
+      expect(data.status).toBe('ok');
+      expect(data.service).toBe('access-service');
+      expect(data.timestamp).toBeDefined();
+      expect(data.uptime).toBeDefined();
+    });
+  });
 });
 
 describe('OpenAPI Endpoints', () => {
@@ -178,6 +192,24 @@ describe('OpenAPI Endpoints', () => {
       const data = await response.json();
       expect(data).toHaveProperty('openapi');
       expect(data.info.title).toBe('Community API');
+    });
+  });
+
+  describe('Access Service', () => {
+    it('should return 200 and valid OpenAPI JSON for /access/openapi.json', async () => {
+      const response = await fetch(`${BASE_URL}/access/openapi.json`);
+      
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toHaveProperty('openapi');
+      expect(data.info.title).toBe('Access API');
+    });
+
+    it('should return 200 for /access/docs (Swagger UI)', async () => {
+      const response = await fetch(`${BASE_URL}/access/docs`);
+      
+      expect(response.status).toBe(200);
+      expect(response.headers.get('content-type')).toContain('text/html');
     });
   });
 });

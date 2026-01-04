@@ -110,6 +110,11 @@ async function main() {
     console.log('\nRunning integration tests...');
     execSync('pnpm vitest run tests/integration', {
       stdio: 'inherit',
+      env: {
+        ...process.env,
+        TEST_DATABASE_URL: 'postgresql://test:test@localhost:5433/access_db',
+        RABBITMQ_URL: 'amqp://test:test@localhost:5673',
+      },
     });
 
     console.log('\n✓ Integration tests passed!');
