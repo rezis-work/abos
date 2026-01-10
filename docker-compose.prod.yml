@@ -375,7 +375,7 @@ services:
       - "${NGINX_PORT:-80}:80"
       - "${NGINX_HTTPS_PORT:-443}:443"
     volumes:
-      - ./infra/nginx/nginx-ssl.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - /var/www/certbot:/var/www/certbot:ro
     depends_on:
