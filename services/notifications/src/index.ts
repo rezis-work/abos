@@ -8,6 +8,7 @@ import {
   errorHandler,
   requestLogger,
   correlationId,
+  createCorsMiddleware,
 } from "@common/http";
 import { healthRoute } from "./routes/health";
 import notificationsRoutes from "./routes/notifications";
@@ -19,6 +20,7 @@ const logger = createLogger(env.SERVICE_NAME || "notifications-service");
 const app: Express = express();
 
 // Middleware
+app.use(createCorsMiddleware());
 app.use(express.json());
 app.use(correlationId());
 app.use(requestLogger(logger));

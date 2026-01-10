@@ -8,6 +8,7 @@ import {
   errorHandler,
   requestLogger,
   correlationId,
+  createCorsMiddleware,
 } from "@common/http";
 import { healthRoute } from "./routes/health";
 import ticketsRoutes from "./routes/tickets";
@@ -20,6 +21,7 @@ const logger = createLogger(env.SERVICE_NAME || "tickets-service");
 const app: Express = express();
 
 // Middleware
+app.use(createCorsMiddleware());
 app.use(express.json());
 app.use(correlationId());
 app.use(requestLogger(logger));

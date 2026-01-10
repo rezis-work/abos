@@ -141,5 +141,6 @@ export function validateQuery<T extends ZodSchema>(schema: T) {
 
 export * from './rate-limit';
 export * from './swagger';
+export * from './cors';
 export { express, Express, Request, Response, NextFunction };
 
