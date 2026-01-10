@@ -1,5 +1,4 @@
 import cors, { CorsOptions } from 'cors';
-import { Request, Response, NextFunction } from 'express';
 
 export interface CorsConfig {
   origin?: string | string[] | ((origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => void);
