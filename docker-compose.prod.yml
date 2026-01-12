@@ -101,6 +101,7 @@ services:
       - JWT_ACCESS_TOKEN_EXPIRY=${JWT_ACCESS_TOKEN_EXPIRY:-15m}
       - REFRESH_TOKEN_EXPIRY=${REFRESH_TOKEN_EXPIRY:-7d}
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     networks:
       - abos-network
     depends_on:
@@ -146,6 +147,7 @@ services:
       - REDIS_URL=redis://:${REDIS_PASSWORD:-redis}@redis:6379
       - JWT_SECRET=${JWT_SECRET}
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     networks:
       - abos-network
     depends_on:
@@ -196,6 +198,7 @@ services:
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-rabbitmq}:${RABBITMQ_PASSWORD:-rabbitmq}@rabbitmq:5672
       - REDIS_URL=redis://:${REDIS_PASSWORD:-redis}@redis:6379
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     networks:
       - abos-network
     depends_on:
@@ -244,6 +247,7 @@ services:
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-rabbitmq}:${RABBITMQ_PASSWORD:-rabbitmq}@rabbitmq:5672
       - REDIS_URL=redis://:${REDIS_PASSWORD:-redis}@redis:6379
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     networks:
       - abos-network
     depends_on:
@@ -289,6 +293,7 @@ services:
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-rabbitmq}:${RABBITMQ_PASSWORD:-rabbitmq}@rabbitmq:5672
       - REDIS_URL=redis://:${REDIS_PASSWORD:-redis}@redis:6379
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     networks:
       - abos-network
     depends_on:
@@ -337,6 +342,7 @@ services:
       - RABBITMQ_URL=amqp://${RABBITMQ_USER:-rabbitmq}:${RABBITMQ_PASSWORD:-rabbitmq}@rabbitmq:5672
       - REDIS_URL=redis://:${REDIS_PASSWORD:-redis}@redis:6379
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     networks:
       - abos-network
     depends_on:
